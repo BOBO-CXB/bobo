@@ -1,5 +1,8 @@
 # Spring Cloud
 
+> **相关笔记**：[[Spring]] · [[SpringBoot]] · [[SpringBoot-Web]]
+
+
 ### 一、Spring Cloud原理
 
 ​		Spring Cloud微服务架构，是一个全家桶式的技术栈，包含了很多组件、核心组件包括**Eureka、Ribbon、Feign、Hystrix、Zuul**等。利用 spring boot 的开发便利性巧妙地简化了分布式系统分布式系统基础设施的开发，如服务发现注册、配置中心、消息总线、负载均衡、断路器、数据监控等。

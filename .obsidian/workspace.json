@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "code/注册信息.md",
+                "file": "code/节点分享.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "注册信息"
+              "title": "节点分享"
             }
           }
         ]
@@ -196,6 +196,7 @@
   },
   "active": "94c4bee2277a7822",
   "lastOpenFiles": [
+    "code/注册信息.md",
     "code/常用指令.md",
     "code/服务器信息.md",
     "code/国能堡垒机.md",
@@ -208,7 +209,6 @@
     "code/省钱.md",
     "code/线上环境.md",
     "code/正式环境VPN堡垒机.md",
-    "code/注册信息.md",
     "code/服务器信息.md.tmp.32152.f78d9b223094",
     "code/服务器信息.md.tmp.32152.f31da0ac0128",
     "code/正式环境VPN堡垒机.md.tmp.32152.e1a1e91006ff",

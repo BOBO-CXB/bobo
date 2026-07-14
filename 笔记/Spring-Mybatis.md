@@ -1,5 +1,8 @@
 # Spring-Mybatis
 
+> **相关笔记**：[[Spring]] · [[MyBatis]] · [[Mysql安装]]
+
+
 http://mybatis.org/spring/zh/index.html
 
 ### 步骤：

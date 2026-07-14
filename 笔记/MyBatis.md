@@ -1,5 +1,8 @@
 ## MyBatis
 
+> **相关笔记**：[[Spring-Mybatis]] · [[Spring]] · [[Mysql安装]] · [[依赖管理]]
+
+
 #### 中文文档：https://mybatis.org/mybatis-3/zh/index.html
 
 #### Meavn：https://mvnrepository.com/artifact/org.mybatis/mybatis
