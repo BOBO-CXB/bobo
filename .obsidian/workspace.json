@@ -11,10 +11,14 @@
             "id": "94c4bee2277a7822",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "关系图谱"
+              "type": "markdown",
+              "state": {
+                "file": "AI/BOT/主人格-布布.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "主人格-布布"
             }
           }
         ]
@@ -90,6 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "AI/BOT/主人格-布布.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -99,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "反向链接"
+              "title": "主人格-布布 的反向链接列表"
             }
           },
           {
@@ -190,6 +195,9 @@
   },
   "active": "94c4bee2277a7822",
   "lastOpenFiles": [
+    "AI/BOT/主人格-布布.md",
+    "AI/BOT",
+    "AI",
     "工作/项目/G-国能二期/01_评价分析及指标填报优化PRD.md",
     "工作/项目/G-国能二期/00_成果清单.md",
     "工作/项目/G-国能二期/02_打开评价分析原型.html",
@@ -221,8 +229,6 @@
     "code/正式环境VPN堡垒机.md.tmp.32152.e1a1e91006ff",
     "code/qq_bot.md.tmp.32152.b87664562a4d",
     "code/国能堡垒机.md.tmp.32152.b40f85545433",
-    "code/VPN.md.tmp.32152.ab657447b272",
-    "code/微信公众号.md.tmp.32152.b2dafc9c4e8d",
     "笔记/Element-UI.md",
     "code/VPN.md",
     "code/thing_model.md",
