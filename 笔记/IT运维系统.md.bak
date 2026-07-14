@@ -1,0 +1,1032 @@
+# IT运维系统
+
+### 结构：SSM框架+JSP
+
+#### hlnms-webapp：controller层+视图层
+
+- ##### controller   controller 层  --命名： XXXController
+
+- ##### webapp   视图层
+
+  - ###### app 页面
+
+  - ###### resource  js脚本 css样式文件 图片等资源
+
+  - ###### WEB-INF/tags 自定义标签
+
+#### hlnms-service：service层
+
+- ##### api 接口     --命名：XXXServiceAPI
+
+- ##### impl 实现类  --命名：XXXService
+
+#### hlnms-dao:  dao层
+
+- ##### api 接口      --命名：XXXDaoAPI
+
+- ##### resources/mapper 对应Sql xml文件  -命名：-XXXMapper
+
+### 关系：
+
+- ##### XXXService  implements  XXXServiceAPI service实现service接口
+
+- ##### XXXService 调用 XXXDaoAPI 进行数据库操作
+
+- ##### XXXDaoAPI 与 -XXXMapper 一一对应 在Mapper中编写Sql语句
+
+- ##### XXXController 控制层调用  XXXService  service层实现相关业务
+
+
+
+### hlnms-probe （重点）
+
+##### 根据不同协议采集各个资源指标
+
+
+
+### 数据表
+
+- #### md_motype  模型类型表
+
+![image-20220316164807829](C:\Users\CHENXINBO\AppData\Roaming\Typora\typora-user-images\image-20220316164807829.png)- 
+
+##### ISTOP:0表示该模型为顶层对象，1表示子对象
+
+可以根据MOTYPETABLE字段获取该模型下所有资源所在的表 **obj_xxxx**
+
+- #### obj_xxxx  资源表   xxx为对应模型类别ID
+
+![image-20220316165126226](C:\Users\CHENXINBO\AppData\Roaming\Typora\typora-user-images\image-20220316165126226.png)
+
+##### 上图为模型ID为10001（Linux服务器）下的部分资源
+
+- #### rlt_motype_obj 模型-资源关联表
+
+![模型-资源关系表](C:\Users\CHENXINBO\Desktop\IT运维\模型-资源关系表.png)
+
+- ##### 资源ID
+
+- ##### 资源类型
+
+- ##### 父资源ID
+
+- ##### 父资源类型
+
+每一个模型有其对应的指标集
+
+![指标集](C:\Users\CHENXINBO\Desktop\IT运维\指标集.png)
+
+以Linux服务器为例 该模型有两个指标集 ICMP指标集和SNMP指标集 对应的数据表为  **md_indicatorset**
+
+![指标集表](C:\Users\CHENXINBO\Desktop\IT运维\指标集表.png)
+
+关键字段：
+
+- INDICATORSETID：指标集ID
+
+- INDICATORSETCODE：指标集编码
+
+- INDICATORSETNAME：指标集名称
+
+- ##### MOTYPEID：所属模型ID
+
+- ##### INDICATORTABLE：指标数据所对应的表
+
+指标所在的表为**md_indicator**
+
+![指标表](C:\Users\CHENXINBO\Desktop\IT运维\指标表.png)
+
+字段：
+
+![指标表字段](C:\Users\CHENXINBO\Desktop\IT运维\指标表字段.png)
+
+关键字段：
+
+- INDICATORID：指标ID
+- MOTYPEID：模型ID
+- INDICATORTYPE：指标集ID
+- COMMAND：采集指标命令（非KPI指标）
+- CALCULATION：计算方式（如果是KPI指标，此处存储的是计算规则）
+- COLUMNNAME：对应列名（KPI__XX,即该指标在指标采集表中所在的列）
+
+##### 以指标10029（CPU使用率为例） 
+
+- 该指标为模型10001（Linux服务器）
+- 10023（LinuxServerSNMPSet）指标集中的指标  
+- 是一个KPI指标 计算公式为  AVG{#[Linux服务器CPU].[Linux Server CPU SNMP Set].[cpu使用率]}
+- 在数据表中对应的列为 KPI_1 由指标集可知对应的表为RAW_10023
+
+##### 综合来看就是 Linux服务器模型的 LinuxServerSNMPSet指标集中的 CPU使用率指标 存放在 RAW_10023表的 KPI_1 字段
+
+
+
+#### 角色管理：
+
+数据表：
+
+- pms_role   角色表
+- pms_role_menu  角色-菜单关联表 **角色ID-菜单ID**
+- pms_role_motype 角色-模型关联表 **角色ID-模型ID-对应资源数据表名**
+- pms_role_node 角色-资源管理表   **角色ID-资源ID-模型ID**
+
+
+
+#### 资源列表功能模块
+
+查询实体列表：getEntityItems（） 查询设备级的对象数据，包含统计子对象数量、过滤条件、分页
+
+参数：
+
+- pageSize：分页大小
+- curPage：当前页面
+- alarmId：告警状态ID（默认-1） 关联**rlt_obj_alarmstatus**表
+- venderId：销售公司ID（默认-1）关联**cfg_vendor**表
+- domainId：所属域ID（默认-1）关联**cfg_domain**表
+- motypeId：模型ID（默认-1）
+- searching：搜索内容（默认”“）
+
+1、PageBounds绑定分页
+
+```java
+PageBounds pageBounds = new PageBounds(curPage, pageSize);
+```
+
+2、根据当前用户获取该用户对应的资源结点,**查找用户资源权限，返回设备级对象ID**
+
+```java
+List<String> objIds = commonServiceAPI.getResCodeList(Common.getRemoteUser(request));
+```
+
+- 2.1如果当前用户为管理员（userType=1），则返回NULL
+
+```java
+pmsDaoAPI.findUserType(userId) == 1
+```
+
+- 2.2 否则根据用户查找结点列表   如果为空插入负值为过滤参数
+
+- ```java
+  List<String> list = pmsDaoAPI.user_hasNodes(userId);
+  if (list.size() == 0)
+    {
+       list.add("-888888");
+    }
+  ```
+
+- user_hasNodes 根据用户ID 获取其有权限的资源ID
+
+  - 1、根据用户ID查询用户角色，根据**pms_role_node**表的关联查找具体资源
+  - 2、根据用户ID查询用户角色，根据**pms_role_motype**表找到相应的模型ID,再根据**rlt_motype_obj**找到模型下的资源
+  - 3、两者取并集
+
+3、若objIds为null或空，说明该用户无有权限的资源，直接返回null，否则根据资源ID查询具体资源信息
+
+​	3.1、设置数据源
+
+```java
+DataSourceContextHolder.setTargetDataSource(DataSourceType.model);
+```
+
+​	3.2、查询所有模型信息,获取对应模型所存的数据表表名
+
+```java
+List<Map<String, Object>> params = resourceCount.getObjectsMoTables();
+```
+
+​	3.3、若模型不为空，则查询资源信息，参数：分页、用户权限下的资源ID列表、模型列表、搜索内容、告警状态、销售商ID、模型ID、区域ID
+
+```java
+moinfos = resourceCount.getAllEntitesForCount(pageBounds, objIds, params, searching, alarmId, venderId,
+        motypeId, domainId);
+```
+
+查询所有资源信息：  遍历模型列表，从模型中获取资源所在数据表名 拼接到sql语句中
+
+```sql
+<foreach collection="params" item="item" index="key" separator="union">
+        SELECT
+        O.OBJID,O.OBJNAME,O.OBJCODE,O.IP,O.MOTYPEID,case when O.VENDORID is null then 0 else O.VENDORID end as
+        VENDORID,O.MODEL,V.VENDORNAME,O.DOMAIN AS DOMAINID,D.DOMAINNAME,
+        '${item.MOTYPETABLE}' as MOTYPETABLE,
+        '${item.MOTYPENAME}' as MOTYPENAME,
+        '${item.MOTYPECODE}' as MOTYPECODE
+        FROM
+        ${item.MOTYPETABLE} O LEFT JOIN cfg_vendor V ON O.VENDORID=V.VENDORID LEFT JOIN cfg_domain D ON
+        O.DOMAIN=D.DOMAINID
+</foreach>
+```
+
+增加限制条件，查询满足筛选条件的数据：
+
+```sql
+<select id="getAllEntitesForCount" resultType="java.util.HashMap" parameterType="java.util.Map" databaseId="mysql">
+    SELECT
+    A.*, CASE OA.ALARMSTATUS WHEN 0 THEN 7 ELSE OA.ALARMSTATUS END AS
+    ALARMSTATUS,L.ALARMLEVELCOLOR,L.ALARMLEVELNAME,L.ALARMLEVELRGB
+    FROM
+    (
+    <foreach collection="params" item="item" index="key" separator="union">
+        SELECT
+        O.OBJID,O.OBJNAME,O.OBJCODE,O.IP,O.MOTYPEID,case when O.VENDORID is null then 0 else O.VENDORID end as
+        VENDORID,O.MODEL,V.VENDORNAME,O.DOMAIN AS DOMAINID,D.DOMAINNAME,
+        '${item.MOTYPETABLE}' as MOTYPETABLE,
+        '${item.MOTYPENAME}' as MOTYPENAME,
+        '${item.MOTYPECODE}' as MOTYPECODE
+        FROM
+        ${item.MOTYPETABLE} O LEFT JOIN cfg_vendor V ON O.VENDORID=V.VENDORID LEFT JOIN cfg_domain D ON
+        O.DOMAIN=D.DOMAINID
+    </foreach>
+    ) A
+    LEFT JOIN rlt_obj_alarmstatus OA ON A.OBJID = OA.OBJID LEFT JOIN cfg_alarmlevel L ON
+    OA.ALARMSTATUS=L.ALARMLEVELID
+    <where>
+        <if test="objIds!=null">
+            A.OBJID IN
+            <foreach item="item" index="index" collection="objIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="searching!=null">
+            <bind name="pattern" value="'%' + searching + '%'"/>
+            AND (UPPER(OBJNAME) LIKE '${pattern}' OR IP LIKE '${pattern}')
+        </if>
+        <if test="alarmId!=-1">
+            AND ALARMSTATUS=#{alarmId}
+        </if>
+        <if test="venderId!=-1">
+            AND VENDORID=#{venderId}
+        </if>
+        <if test="motypeId!=-1">
+            AND MOTYPEID=#{motypeId}
+        </if>
+        <if test="domainId==0">
+            AND (A.DOMAINID IS NULL OR A.DOMAINID='')
+        </if>
+        <if test="domainId!=-1 and domainId!=0">
+            AND A.DOMAINID=#{domainId}
+        </if>
+    </where>
+    ORDER BY
+    ALARMSTATUS ASC,OBJID DESC
+</select>
+```
+
+4、根据资源ID，查询该资源下子资源的数量
+
+```java
+ for (Map<String, Object> info : moinfos)
+            {
+                long objId = Long.parseLong(info.get("OBJID").toString());
+                List<Map<String, Object>> subCounts = resourceCount.getSubTypeCountOfEntity(objId);
+                info.put("subCounts", subCounts);
+            }
+```
+
+根据**rlt_motype_obj** 表中父ID和父类型来分组计数
+
+```sql
+		SELECT
+            COUNT(MO.MOTYPEID) AS NUM,
+            MO.MOTYPEID,
+            M.MOTYPENAME,
+            M.MOTYPETABLE
+        FROM rlt_motype_obj MO, md_motype M
+        WHERE MO.PARENTID = #{objId} AND MO.MOTYPEID = M.MOTYPEID
+        GROUP BY MO.MOTYPEID, M.MOTYPENAME, M.MOTYPETABLE
+```
+
+
+
+#### 查询资源下所属子对象信息
+
+getSubEntites（）
+
+参数：
+
+- moTable: 子资源所在的表（由查询资源列表时返回的subCounts中的MOTYPETABLE确定）
+
+- objId: 资源ID（父资源）
+
+- subMotypeId: 子模型ID
+
+- searching: 搜索条件
+
+- pageSize: 分页大小
+
+- curPage: 当前页
+
+- sortName: 
+
+- sortOrder:
+
+
+
+### 新增模型
+
+##### API:  addMoType（）
+
+参数;
+
+- code(moTypeCode) 模型编码
+- name(moTypeName) 模型名称
+- isTop 0：顶层对象 1：子对象
+- groupId：分组Id    **md_group**
+- parentIds：父对象Id
+- id：0：新增 
+- attrs：属性(基础属性+自定义属性)
+- commonMotypeId：公共类型  **md_motype_common**
+
+#### 1、增加模型数据以及相关obj_xxx表   addMoTypeModel
+
+​	参数：
+
+- moTypeCode 
+- MoTypeName
+-  isTop
+-  request
+
+```java
+HashMap<String, Object> map = new HashMap<>();
+            map.put("moTypeCode", moTypeCode);
+            map.put("moTypeName", MoTypeName);
+            map.put("isTop", isTop);
+            map.put("createUser", com.halu.saber.service.Common.getRemoteUser(request));
+            map.put("createtime", new Date());
+modelTypeDaoAPI.saveMoType(map);
+```
+
+在模型表md_moType中新增一条数据，插入时根据获取到的模型ID，生成相应表名**obj_${id}**
+
+```sql
+ <selectKey keyProperty="id" resultType="java.lang.Integer" order="BEFORE" databaseId="oracle">
+        select seq_obj_id.nextval id from dual
+ </selectKey>
+ <selectKey keyProperty="id" resultType="java.lang.Integer" order="BEFORE" databaseId="mysql">
+        select nextval('SEQ_OBJ_ID')
+ </selectKey>
+ 
+     insert into Md_Motype (motypeid,motypecode,motypename,ISTOP,motypetable,createuser,createtime)
+     values (#{id}, #{moTypeCode},#{moTypeName},#{isTop},'obj_${id}',#{createUser},#{createtime})
+```
+
+根据模型编码获取模型ID，生成obj_xxx表 **createObjTable(MoTypeId, request);**
+
+首先判断obj_xxx表是否存在，若不存在，则动态生成属性列：
+
+```java
+if (exist == 0)
+    {
+        List<String> columns = new ArrayList<String>();
+
+    // 添加动态属性
+    for (int i = 2; i <= COLUMNS_COUNT; i++)
+    {
+        String att = ATTRIBUTE + i;
+        columns.add(att);
+    }
+    tableParam.put("columns", columns);
+```
+
+参数：
+
+```java
+// 表名前缀
+private static final String OBJ_TABLE = "OBJ_";
+// 属性列前缀
+private static final String ATTRIBUTE = "Att_";
+// 列数量
+private static final int COLUMNS_COUNT = 50;
+```
+
+#### 2、如果groupId不为空  保存模型与分组之间的联系 (即在 rlt_motype_group 表中新增数据)
+
+```java
+HashMap<String, Object> map = new HashMap<>();
+map.put("moTypeId", id);
+map.put("groupId", groupId);
+
+modelTypeDaoAPI.saveMotypeGroup(map);
+```
+
+#### 3、如果该模型有父类型 parentIds不为空 增加两者之间的关联（addMoRelation(parentIds, moTypeCode, request);）
+
+在**rlt_motype_motype**表中插入数据
+
+字段：
+
+- MOTYPEID   模型ID
+- PARENTMOTYPEID  父模型ID
+
+#### 4、如果有公共模型 commonMotypeId不为空 增加两者之间的关联（modelTypeDaoAPI.saveMotypeCommon(map);）
+
+在**rlt_commonmotype_motype**中插入数据
+
+字段：
+
+- MOTYPEID 模型ID
+- COMMONMOTYPEID  公共模型ID
+
+#### 5、如果属性不为空 attrs不为空，为模型增加属性
+
+attrs：
+
+- 基础属性（根据公共模型确定?）
+- 自定义属性
+
+数据结构：{"attrName":"属性1","unit":"","comAttrName":"*"}
+
+- attrName：属性名
+- unit：单位 （为空表示为text）
+- comAttrName：基础属性（自定义属性为*）
+
+方法：addMoAttribute(attrs, id, request, attributeMap);
+
+参数：
+
+- attrs：前端传入的属性（JSON）
+- id：模型ID
+- request:请求
+- attributeMap：在新增模型时为空
+
+##### addMoAttribute(attrs, id, request, attributeMap)
+
+- 对数据进行处理 放入HashMap中
+
+```java
+HashMap<String, Object> map = new HashMap<>();
+map.put("attributeName", attributeJson.get("attrName"));
+map.put("moTypeId", moTypeId);
+map.put("createUser", com.halu.saber.service.Common.getRemoteUser(request));
+map.put("createtime", new Date());
+// 判断属性的单位是否为空，如果为空则为text，数据库保存为null
+if (!ObjectUtils.isEmpty(attributeJson.get("unit")))
+{
+    map.put("attributeUnitl", attributeJson.get("unit"));
+}
+```
+
+- 获取当前模型属性列数组 （modelTypeDaoAPI.getUserATTNum(moTypeId)）
+
+```sql
+select replace(t.columnname,'ATT_','') as NUM  from md_moattribute t where t.motypeid=#{_parameter}
+```
+
+- 在**md_moattribute**表插入数据
+
+```java
+if (!ATTCount.contains((i + 1) + ""))
+{
+    map.put("columnName", "ATT_" + (i + 1));      //在obj_xxx 中该属性对应于那一列
+    // 判断之前是否存在该属性，若存在，则保留原属性ID
+    if (!ObjectUtils.isEmpty(attributeMap.get(map.get("attributeName"))))
+    {
+        map.put("id", attributeMap.get(map.get("attributeName")));
+        modelTypeDaoAPI.insertMoAttribute(map);   
+    }
+    else
+    {
+        modelTypeDaoAPI.saveMoAttribute(map);
+    }
+}
+```
+
+- 如果为基础属性，需要插入属性与公共属性的关联关系 **rlt_commonattribute_attribute**
+
+字段：
+
+- MOTYPEID 模型ID
+- ATTRIBUTEID 属性ID
+- COMMONATTRIBUTEID 公共属性ID
+
+```java
+if (!"*".equals(attributeJson.get("comAttrName")))
+{
+    // 校验没有问题开始插入数据
+    map.put("commonAttributeName", attributeJson.get("comAttrName"));
+    Map<String, Object> commonAttributeMap = modelTypeDaoAPI.getCommonAttributeMap(map);
+    String commonAttributeId = String.valueOf(commonAttributeMap.get("COMMONATTRIBUTEID"));
+    // 判断属性是否存在
+    String attributeID = modelTypeDaoAPI.getAttrIdByNameAndModelType(map);
+    map.put("attributeId", attributeID);
+    map.put("commonAttributeId", commonAttributeId);
+    modelTypeDaoAPI.insertRltComattrAttr(map);
+}
+```
+
+
+
+
+
+### 新增指标
+
+```java
+addIndicator(IndicatorModel indicatorModel, HttpServletRequest request)
+```
+
+参数：
+
+- indicatorid 指标id，为0时表示新增，否则为更新指标
+
+- indicatorcode 指标编码
+- indicatorsetid  指标集编码
+- motypeid 模型ID
+- indicatortype 指标类型  0:KPI指标 1:普通指标
+- isView 是否显示
+
+**md_indicator**
+
+如果是公共指标 需要增加两者之间的联系 **rlt_commonindicator_indicator**
+
+
+
+```java
+// 数据库变动时通知后台 根据探针类型给探针发送消息
+commonServiceAPI.sendMessageToProbe(ProbeType.Performance, ProbeCommandName.update);
+```
+
+```java
+//枚举类
+public enum ProbeType {
+    Discover, Configuration, Performance, Dial, Event, Inspect, ConfigFile, Process,vmware
+}
+
+public enum ProbeCommandName {
+    start, stop, update, updateConfigs, status, realTime, realTimeConnect
+}
+
+```
+
+#####  sendMessageToProbe
+
+1、根据探针类型 获取探针列表 **collect_probe**
+
+```java
+List<String> probeIds = common.getProbeList(probeType.name());
+```
+
+
+
+![采集凭证配置](C:\Users\CHENXINBO\Desktop\IT运维\采集凭证配置.png)
+
+**collect_credential **采集凭证表
+
+![采集凭证表](C:\Users\CHENXINBO\Desktop\IT运维\采集凭证表.png)
+
+param与新增时参数对应 **PROTOCOLID**  为协议ID
+
+![snmp采集凭证参数](C:\Users\CHENXINBO\Desktop\IT运维\snmp采集凭证参数.png)
+
+
+
+#### 指标采集任务：
+
+#### 使用Quartz来作为解决任务调度的工具（相较于Timer 可以处理复杂逻辑调度和类似于每个星期一12：00处理任务）
+
+##### 结构：
+
+- **Job接口**：这个方法定义了需要调度的方法，开发者在使用Quartz并定义调度任务时候，需要实现这个接口并且重写此方法。
+
+```java
+public interface Job {
+    void execute(JobExecutionContext var1) throws JobExecutionException;
+}
+
+```
+
+在本项目中使用**JobImpl**来实现该接口
+
+```java
+public class JobImpl implements Job
+{
+    private static final Logger logger = LoggerFactory.getLogger(JobImpl.class);
+
+    @Override
+    public void execute(JobExecutionContext context) throws JobExecutionException
+    {
+        //需要进行调度执行的任务
+        TaskManager.getInstance().executeTask();
+    }
+}
+```
+
+- **JobDetail **JobDetail表示一个具体的可执行的调度程序，Job是这个可执行调度程序所要执行的内容，另外JobDetail还包含了这个任务调度的方案和策略
+
+```java
+JobDetail jobDetail = JobBuilder
+    				  .newJob(JobImpl.class)   //所要执行的内容 即job的实现类
+    				  .withIdentity("collectTask", Scheduler.DEFAULT_GROUP)  //分组标识
+                      .build();
+```
+
+- **Trigger** 触发器 主要是触发Job执行的时间触发规则
+  - SimpleTrigger
+  - CronTrigger
+
+CronTrigger 支持类似日历的重复间隔，而不是单一的时间间隔。
+
+```java
+ // 触发器
+TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger();
+// 触发器名,触发器组
+triggerBuilder.withIdentity("collectTaskTrigger", Scheduler.DEFAULT_GROUP);
+triggerBuilder.startNow();
+// 触发器时间设定
+triggerBuilder.withSchedule(CronScheduleBuilder.cronSchedule(taskPeriodStr));
+// 创建Trigger对象
+CronTrigger trigger = (CronTrigger) triggerBuilder.build();
+```
+
+- 通过triggerBuilder.build 来获得一个触发器实例
+
+- 可以通过triggerBuilder来设置触发器属性 如触发器组、触发器时间等
+
+- triggerBuilder.withSchedule(）设置触发时间 传入的是 CronScheduleBuilder.cronSchedule(taskPeriodStr)
+
+- CronScheduleBuilder.cronSchedule(taskPeriodStr)  taskPeriodStr为cron表达式 表示执行的时间间隔
+
+  - ```java
+    ProbeTaskQuartz=0 0/5 * * * ?    //每5分钟执行一次
+    ```
+
+- **Scheduler**代表一个Quartz的独立运行容器，Trigger和JobDetail可以注册到Scheduler中，二者在Scheduler中有各自的组件、名称和组
+
+```java
+scheduler.scheduleJob(jobDetail, trigger);
+```
+
+Scheduler可以将Trigger绑定到某一个JobDetail上，当Trigger被触发时，对应的Job就被执行，一个Job可以对应多个Trigger，一个Trigger只能对应一个Job，
+
+```java
+scheduler.start();
+```
+
+启动执行
+
+每过5分钟后就会执行**TaskManager.getInstance().executeTask()**方法
+
+- TaskManager.getInstance()  获得一个TaskManager的单例对象
+- .executeTask()执行该对象下的executeTask方法
+
+
+
+#### 执行采集任务  executeTask（） （snmp协议）
+
+1、首先根据配置文件获取探测任务周期(默认为300秒 即5分钟)
+
+```java
+ String taskPeriodStr = ProbeContextHolder.getStringValue("ProbeTaskPeriod");
+long taskPeriod = 300;
+if (!ObjectUtils.isEmpty(taskPeriodStr) && ObjectUtils.isNumber(taskPeriodStr))
+{
+    taskPeriod = Long.parseLong(taskPeriodStr);
+}
+```
+
+ProbeContextHolder 根据不同的探针类型读取相应的配置文件 在探针启动时读取相应的配置文件
+
+ProbeContextHolder.getStringValue("ProbeTaskPeriod");    获取配置文件  **core.properties **中 **ProbeTaskPeriod**对应的值
+
+2、获取任务开始时间
+
+```java
+long nowTime = System.currentTimeMillis();
+Date startTime = new Date(nowTime - nowTime % (taskPeriod * 1000));  //格式化时间 去除偏差 精确到 00秒
+```
+
+3、获取需要进行采集的对象列表
+
+采集对象的操作基本都通过**ObjectManager**类来进行操作
+
+```java
+List<ObjectModel> objectModelList = objectManager.getObjectList(
+         ProbeContextHolder.getStringValue(Constants.PROBE_PROTOCOL), System.getProperty(Constants.PROBE_ID));
+```
+
+**objectManager.getObjectList（String protocol, String probeId）**
+
+参数：
+
+- protocol  探针采集协议此处值为（“SNMP”）
+
+  - **Constants.PROBE_PROTOCO** 常量 ProbeProtocol
+
+  - 即 ProbeContextHolder.getStringValue（“ProbeProtocol”）
+
+  - ```properties
+    ProbeProtocol=SNMP
+    ```
+
+- probeId 探针ID  值为（“Probe-Perf-SNMP”）
+
+  - **Constants.PROBE_ID** 常量 **probe.id**
+  - 即 System.getProperty(“probe.id”)
+
+##### （1）根据 probeId 探针ID获取各个模型及其对应协议下的指标集以及属性
+
+**md_motype**  根据 MOTYPEID关联 **md_indicatorset  **
+
+**md_indicatorset** 根据指标集ID关联 **md_indicatorass**
+
+从**collect_probe**表和**cfg_protocol**表中获取对应的协议ID **protocolid**进行筛选
+
+Probe-Perf-SNMP 对应的协议为 SNMP  对应的协议ID为 2
+
+返回数据结构如下：
+
+![根据探针ID获取各模型对应协议下的指标集](C:\Users\CHENXINBO\Desktop\IT运维\根据探针ID获取各模型对应协议下的指标集.png)
+
+##### （2）遍历上方集合 如果 根据协议ID、探针ID、资源表名获取所有对象
+
+```java
+allObjList = performanceDao.getObjectForAll(protocol, probeId, motypetable);
+```
+
+数据表：
+
+- obj_xxx  资源实体表
+- collect_credential  采集凭证表
+- rlt_credentials_obj 采集凭证-资源联系表
+
+限制条件：
+
+- OBJ.ISCOLLECTION = 1 资源是否采集标志位为 1
+- 资源凭证的协议ID
+
+```sql
+(SELECT PROTOCOLID 
+FROM CFG_PROTOCOL 
+WHERE PROTOCOLNAME = ?) 
+AND OBJ.OBJID IN
+( SELECT MO.OBJID FROM rlt_motype_obj MO , collect_probe P WHERE MO.SERVERID = P.SERVERID AND P.PROBEID = ?)
+```
+
+SERVERID 作用暂不清楚
+
+返回字段：
+
+- 资源ID
+- 资源名称
+- 资源IP
+- 凭证ID
+- 凭证名称
+- 凭证参数
+
+![资源-采集凭证](C:\Users\CHENXINBO\Desktop\IT运维\资源-采集凭证.png)
+
+根据asstype 对allObjList进行筛选 得到筛选后的数组objList
+
+- 0：全部
+- 1：动态
+- 2：静态
+
+遍历allObjList，以及凭证参数键值对，取出
+
+- credentialId  凭证ID
+- credentialName 凭证名称
+- ip 资源IP
+
+凭证参数进行AES128接码后的键值对，以下为snmp凭证参数（不同协议参数不同）：
+
+- port 端口
+- snmpVersion snmp协议版本
+- community 认证需要的community 
+
+将资源属性、采集指标集和上述的采集凭证信息封装到objectModel对象中：
+
+```java
+if (ObjectUtils.isEmpty(ObjectModelMap.get(objid)))
+                {
+                    ObjectModel objectModel = new ObjectModel();
+                    objectModel.setObjId(objid);
+                    objectModel.setObjectName(objname);
+                    objectModel.setIp(ip);
+                    objectModel.setCredential(inMap);
+                    objectModel.setMoTypeId(motypeId);
+                    objectModel.setIndicatorSetIdList(new ArrayList<>());
+                    if (objList.contains(objectMap))
+                    {
+                        objectModel.getIndicatorSetIdList().add(indicatorsetid);
+                    }
+                    ObjectModelMap.put(objid, objectModel);
+                }
+                else
+                {
+                    if (objList.contains(objectMap))
+                    {
+                        ObjectModel objectModel = ObjectModelMap.get(objid);
+                        objectModel.getIndicatorSetIdList().add(indicatorsetid);
+                        ObjectModelMap.put(objid, objectModel);
+                    }
+                }
+```
+
+![ObjectModel数据样例](C:\Users\CHENXINBO\Desktop\IT运维\ObjectModel数据样例.png)
+
+遍历objectModelList，为objModel加载所有的子对象指标集SubIndicatorSetModelList：
+
+```java
+getObject(objectModel, objectModel.getMoTypeId(), objectModel.getObjId());
+```
+
+- 根据模型id  moTypeId 获取所有子模型ID
+- 根据子模型ID获取对象的指标集列表
+- 遍历获取模型下的子资源
+- 将处理后的数据存入SubIndicatorSetModelList列表
+
+最终结果：
+
+![对象节点列表](C:\Users\CHENXINBO\Desktop\IT运维\对象节点列表.png)
+
+
+
+（4）获取到objectModelList后循环遍历
+
+- 根据 objectModel.getIndicatorSetIdList() 中的指标集 获取相应指标模型
+- 根据指标模型获取采集时间间隔，过滤掉不在时间间隔内的数据
+
+```java
+ IndicatorSetModel indicatorSetModel = IndicatorsManager.indicatorSetModelMap.get(indicatorSetId);
+ long period = Long.parseLong(indicatorSetModel.getDataPeriod());
+ IndicatorSetModel indicatorSetModel = IndicatorsManager.indicatorSetModelMap.get(indicatorSetId);
+ long period = Long.parseLong(indicatorSetModel.getDataPeriod());
+```
+
+- 对子资源的指标集进行相同过滤
+- 获得符合时间间隔的采集对象 objMap
+- 遍历objMap 生成采集任务实体列表
+
+```java
+List<TaskModel> taskList = new ArrayList<>();
+for (Map.Entry<String, ObjectModel> entry : objectMap.entrySet())
+    {
+        TaskModel taskModel = new TaskModel(startTime);
+        taskModel.setRootObjectModelList(new ArrayList<>());
+        taskModel.getRootObjectModelList().add(entry.getValue());
+        taskList.add(taskModel);
+
+    }
+```
+
+- startTime  任务开始时间
+- rootObjectModelList  被管对象信息列表
+
+![实体任务列表](C:\Users\CHENXINBO\Desktop\IT运维\实体任务列表.png)
+
+
+
+```java
+TaskQueue.getInstance().commit(taskList);
+```
+
+遍历采集对象，开启一个新的线程放入线程池中来进行采集任务
+
+```java
+ListenableFuture<FutureModel> future = 
+    ThreadPoolManager.getInstance().submit(new TaskThread(rootObjectModel, taskModel.getStartTime()));
+```
+
+任务线程：
+
+```java
+public TaskThread(ObjectModel rootObjectModel, Date startTime)
+{
+    this.rootObjectModel = rootObjectModel;
+    this.startTime = startTime;
+}
+```
+
+传入参数：
+
+- 采集对象
+- 任务开始时间
+
+线程调用**ProbeExecutor**协议采集实现实例 通过**executeTask（）**方法来进行采集任务
+
+```java
+ ProbeExecutor t = null;
+// 执行一个顶层对象的任务
+try
+{
+    t = new ProbeExecutor();
+    return t.executeTask(rootObjectModel, startTime);
+}
+```
+
+#### executeTask（） 采集任务
+
+1、连接
+
+- 获取采集实现类  即**ICollector**接口的实现类 （snmp协议的实现类为**SnmpCollectorImpl**）
+
+```java
+// 获取采集实现类
+collect = (ICollector) ProbeContextHolder.getBean("collector");
+```
+
+- 连接需要被采集的设备，返回连接结果
+
+```java
+// 连接被管对象,传入凭证信息
+collect.connect(rootObjectModel.getCredential());
+```
+
+##### connect：
+
+（1）校验传入的采集凭证格式，如果有问题则抛出异常，没问题则返回一个采集凭证实体对象
+
+```java
+SnmpCredential sc = this.checkSnmpCredential(credentials);
+```
+
+![采集凭证实体](C:\Users\CHENXINBO\Desktop\IT运维\采集凭证实体.png)
+
+
+
+（2）传入当前时间和超期时间，新建一个Snmp协议客户端工具进行连接 （如果配置文件中没有超期时间则默认为3分钟）
+
+```java
+snmpClient = new SnmpClient(new Date(), collectTimeOut);
+```
+
+利用客户端工具进行连接
+
+```java
+isConnect = snmpClient.connect(sc);
+```
+
+2、连接成功后进行采集和计算
+
+利用指标采集方法类 **CollectManager**进行采集 返回**ResultModel**
+
+```java
+ResultModel resultModel = collectManager.collectAndCalculate(rootObjectModel, collect, startTime, isConnect);
+```
+
+传入参数：
+
+- rootObjectModel 被管对象
+- collect 采集实现类
+- startTime 开始时间
+- isConnect 是否进行连接
+
+#### collectAndCalculate：
+
+（1）采集设备指标
+
+- 遍历**indicatorSetIdList**指标集 获取采集结果模型
+
+```java
+ResultObjectModel resultObjectModel = 
+    getResultObjectModel(indicatorSetId, rootObjectModel.getObjId(),
+                        null, collect, isConnect, starTime, valuesMap, logMap);
+```
+
+##### getResultObjectModel
+
+```java
+private ResultObjectModel getResultObjectModel(String indicatorSetId, String objId, String index,
+            ICollector collect, boolean isConnect, Date starTime, Map<String, Map<String, Double>> valueCacheMap,
+            Map<String, String> logMap)
+```
+
+传入参数：
+
+- indicatorSetId 指标集ID
+- rootObjectModel.getObjId() 模型ID
+- index  
+
+- collect 采集实现对象
+- isConnect 是否连接
+- starTime 开始时间
+- valueCacheMap 结果缓存集
+
+- logMap 日志
+
+1、根据指标集ID获取指标集对象
+
+```java
+ IndicatorSetModel indicatorSetModel = IndicatorsManager.indicatorSetModelMap.get(indicatorSetId);
+```
+
+![指标集对象](C:\Users\CHENXINBO\Desktop\IT运维\指标集对象.png)
+
+
+
+2、遍历指标集内的指标对象，生成对应的KEY
+
+```JAVA
+String valueCacheKey = "[" + indicatorSetModel.getMoTypeName() + "]." + "["
+        + indicatorSetModel.getIndicatorSetName() + "]." + "[" + indicatorModel.getIndicatorName() + "]";
+```
+
+例如：[Linux服务器].[Linux Server SNMP Set].[文件系统使用率]
+
+如果是普通指标 即type为1 则进行采集
+
+```java
+collectResult = collect.collect(indicatorModel.getCommand(), index);
+```
+
+如果是KPI指标，则先存入计算公式
+
+![采集结果](C:\Users\CHENXINBO\Desktop\IT运维\采集结果.png)

@@ -1,0 +1,246 @@
+{
+  "main": {
+    "id": "732f591c8daa6a40",
+    "type": "split",
+    "children": [
+      {
+        "id": "9d0d93cddb2524c6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "94c4bee2277a7822",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "code/注册信息.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "注册信息"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "6775e0f8e449d94d",
+    "type": "split",
+    "children": [
+      {
+        "id": "9a0ca8980ce84ea6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "cdd71321d5addee0",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": true
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "5bcb06f0d3755160",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "e299914ce4ad561d",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "4fc256ef8f87d7b7",
+    "type": "split",
+    "children": [
+      {
+        "id": "f9fb10c15acb7fde",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f2456caaaf55605b",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "欢迎.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "欢迎 的反向链接列表"
+            }
+          },
+          {
+            "id": "58aba254c2b593fa",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "欢迎.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "欢迎 的出链列表"
+            }
+          },
+          {
+            "id": "372abca3559fcd1d",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "959bfb632991ac69",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "2127b904bda2f11c",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "欢迎.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "欢迎 的大纲"
+            }
+          },
+          {
+            "id": "5a65771c15e47634",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
+            }
+          }
+        ],
+        "currentTab": 5
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false,
+      "obsidian-git:Open Git source control": false
+    }
+  },
+  "active": "94c4bee2277a7822",
+  "lastOpenFiles": [
+    "code/常用指令.md",
+    "code/服务器信息.md",
+    "code/国能堡垒机.md",
+    "code/浩鲸VPN.md",
+    "code/脚本新.md",
+    "code/节点分享.md",
+    "code/默认字段.md",
+    "code/清除数据.md",
+    "code/批量关联OPCUA点位.md",
+    "code/省钱.md",
+    "code/线上环境.md",
+    "code/正式环境VPN堡垒机.md",
+    "code/注册信息.md",
+    "code/服务器信息.md.tmp.32152.f78d9b223094",
+    "code/服务器信息.md.tmp.32152.f31da0ac0128",
+    "code/正式环境VPN堡垒机.md.tmp.32152.e1a1e91006ff",
+    "code/qq_bot.md.tmp.32152.b87664562a4d",
+    "code/国能堡垒机.md.tmp.32152.b40f85545433",
+    "code/VPN.md.tmp.32152.ab657447b272",
+    "code/微信公众号.md.tmp.32152.b2dafc9c4e8d",
+    "code/注册信息.md.tmp.32152.1fe449280c0a",
+    "code/线上环境.md.tmp.32152.db860f228ddd",
+    "code/浩鲸VPN.md.tmp.32152.3a17e5115509",
+    "笔记/Element-UI.md",
+    "code/VPN.md",
+    "code/thing_model.md",
+    "code/thing_model_typed.md",
+    "code/qq_bot.md",
+    "code/port.md",
+    "code/opc.md",
+    "code/opc_test.md",
+    "code/iot.md",
+    "code/import asyncio.md",
+    "code/git.md",
+    "code/git_安卓.md",
+    "code/from opcua import Client.md",
+    "笔记/images/image-20220316165126226.png",
+    "笔记/images/image-20220316164807829.png",
+    "笔记/images/image-20240201100854707.png",
+    "笔记/images/image-20240201100817116.png",
+    "笔记/images/image-20240201100644431.png",
+    "笔记/images/image-20240201094341958.png",
+    "笔记/images/image-20240201094322305.png",
+    "笔记/images/image-20240201094046405.png",
+    "笔记/images/image-20231115115252386.png",
+    "笔记/images/image-20231115115218292.png"
+  ]
+}
