@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "2026-07-14.md",
+                "file": "工作/项目/G-国能二期/00_成果清单.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-07-14"
+              "title": "00_成果清单"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "2026-07-14.md",
+                "file": "工作/项目/G-国能二期/00_成果清单.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "2026-07-14 的反向链接列表"
+              "title": "00_成果清单 的反向链接列表"
             }
           },
           {
@@ -193,10 +193,16 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "94c4bee2277a7822",
+  "active": "cdd71321d5addee0",
   "lastOpenFiles": [
-    "未命名.canvas",
+    "工作/项目/G-国能二期/打开评价分析原型.html",
     "2026-07-14.md",
+    "工作/项目/G-国能二期/03_研发工作清单.md",
+    "工作/项目/G-国能二期/01_评价分析及指标填报优化PRD.md",
+    "工作/项目/G-国能二期/00_成果清单.md",
+    "工作/项目/G-国能二期",
+    "工作/项目",
+    "未命名.canvas",
     "Dataview 查询.md",
     "笔记/相关参数.md",
     "code/注册信息.md",
@@ -223,15 +229,10 @@
     "code/VPN.md.tmp.32152.ab657447b272",
     "code/微信公众号.md.tmp.32152.b2dafc9c4e8d",
     "code/注册信息.md.tmp.32152.1fe449280c0a",
-    "code/线上环境.md.tmp.32152.db860f228ddd",
-    "code/浩鲸VPN.md.tmp.32152.3a17e5115509",
     "笔记/Element-UI.md",
     "code/VPN.md",
     "code/thing_model.md",
     "code/thing_model_typed.md",
-    "code/qq_bot.md",
-    "code/port.md",
-    "code/opc.md",
     "笔记/images/image-20220316165126226.png",
     "笔记/images/image-20240201100854707.png",
     "笔记/images/image-20240201100817116.png",
