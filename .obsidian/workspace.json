@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "code/服务器信息.md",
+                "file": "工作/项目/徐烟二期/00_项目首页.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "服务器信息"
+              "title": "00_项目首页"
             }
           }
         ]
@@ -96,7 +96,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "code/服务器信息.md",
+                "file": "工作/项目/徐烟二期/00_项目首页.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -197,6 +197,7 @@
   },
   "active": "94c4bee2277a7822",
   "lastOpenFiles": [
+    "code/服务器信息.md",
     "AI/BOT/主人格-布布.md",
     "AI/BOT",
     "AI",
@@ -216,7 +217,6 @@
     "笔记/images/image-20220316164807829.png",
     "code/节点分享.md",
     "code/常用指令.md",
-    "code/服务器信息.md",
     "code/国能堡垒机.md",
     "code/浩鲸VPN.md",
     "code/脚本新.md",
